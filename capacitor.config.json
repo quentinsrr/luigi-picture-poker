@@ -1,0 +1,16 @@
+{
+  "appId": "com.luigipicturepoker.app",
+  "appName": "Picture Poker",
+  "webDir": "dist",
+  "backgroundColor": "#03170F",
+  "ios": {
+    "contentInset": "never"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "native",
+      "initialViewportFitValueHint": "cover",
+      "style": "DARK"
+    }
+  }
+}
