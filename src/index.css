@@ -111,6 +111,20 @@ body {
   transform: rotateY(180deg);
 }
 
+/* Tableau des gains : plus serré sur les petits écrans (iPhone SE…),
+   pour rester au-dessus des cartes de Luigi. */
+@media (max-height: 720px) {
+  .lpp-hands {
+    top: 54px;
+  }
+  .lpp-hands-title {
+    display: none;
+  }
+  .lpp-hands-row {
+    padding-block: 1px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lpp-deal,
   .lpp-pop,

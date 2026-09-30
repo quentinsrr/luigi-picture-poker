@@ -11,8 +11,10 @@ import BigButton from "./components/BigButton.jsx";
 import RulesSheet from "./components/RulesSheet.jsx";
 import Coin from "./components/Coin.jsx";
 import TopScreen from "./components/TopScreen.jsx";
+import HandsPanel from "./components/HandsPanel.jsx";
 import { useArrivalOrder } from "./hooks/useArrivalOrder.js";
 import { useMusic } from "./hooks/useMusic.js";
+import { sfx } from "./audio/sfx.js";
 
 // Chemin relatif : fonctionne sur GitHub Pages comme dans les applis natives.
 const MUSIC_URL = "./audio/music_casino.mp3";
@@ -48,6 +50,7 @@ export default function LuigiPicturePoker() {
   const [stats, setStats] = useState({ wins: 0, losses: 0, ties: 0, best: -1 });
   const [showRules, setShowRules] = useState(false);
   const music = useMusic(MUSIC_URL);
+  useEffect(() => sfx.setEnabled(music.on), [music.on]);
 
   /* --- Références : valeurs lues depuis les timers, hors cycle de rendu --- */
   const dealerRef = useRef(null);
@@ -109,11 +112,14 @@ export default function LuigiPicturePoker() {
     setPhase("dealing");
     setStatus("Distribution…");
 
+    // Dix cartes, en alternance joueur / Luigi, au rythme des vols 3D.
+    for (let k = 0; k < 10; k++) later(sfx.deal, k * TIMING.dealStep);
+
     for (let i = 0; i < 5; i++) {
-      later(
-        () => setPlayerUp((prev) => prev.map((v, j) => (j === i ? true : v))),
-        TIMING.dealSettle + i * TIMING.flipStep
-      );
+      later(() => {
+        setPlayerUp((prev) => prev.map((v, j) => (j === i ? true : v)));
+        sfx.flip();
+      }, TIMING.dealSettle + i * TIMING.flipStep);
     }
 
     later(() => {
@@ -126,6 +132,7 @@ export default function LuigiPicturePoker() {
 
   function toggleCard(i) {
     if (phase !== "exchange") return;
+    sfx.select(!selected[i]);
     setSelected((s) => s.map((v, j) => (j === i ? !v : v)));
   }
 
@@ -151,6 +158,8 @@ export default function LuigiPicturePoker() {
       const freshUids = idx.map(nextUid);
 
       setPlayerUp((prev) => prev.map((v, j) => (idx.includes(j) ? false : v)));
+      sfx.flip();
+      idx.forEach((_, k) => later(sfx.deal, TIMING.swapHide + k * 2 * TIMING.dealStep));
 
       later(() => {
         const updated = playerRef.current.map((c, j) => {
@@ -167,7 +176,10 @@ export default function LuigiPicturePoker() {
           }),
         }));
         setSelected(FIVE_FALSE);
-        later(() => setPlayerUp((prev) => prev.map(() => true)), revealAt);
+        later(() => {
+          setPlayerUp((prev) => prev.map(() => true));
+          sfx.flip();
+        }, revealAt);
       }, TIMING.swapHide);
     }
 
@@ -207,6 +219,7 @@ export default function LuigiPicturePoker() {
 
       luigiRef.current = updated;
       setLuigiHand(updated);
+      idx.forEach((_, k) => later(sfx.deal, k * 2 * TIMING.dealStep));
       setUids((u) => ({
         ...u,
         l: u.l.map((x, j) => {
@@ -224,10 +237,10 @@ export default function LuigiPicturePoker() {
   function revealShowdown() {
     setStatus("Abattage !");
     for (let i = 0; i < 5; i++) {
-      later(
-        () => setLuigiUp((prev) => prev.map((v, j) => (j === i ? true : v))),
-        i * TIMING.showdownStep
-      );
+      later(() => {
+        setLuigiUp((prev) => prev.map((v, j) => (j === i ? true : v)));
+        sfx.flip();
+      }, i * TIMING.showdownStep);
     }
     later(settle, 5 * TIMING.showdownStep + TIMING.beforeSettle);
   }
@@ -249,12 +262,15 @@ export default function LuigiPicturePoker() {
       gain = stake * payout;
       setChips((c) => c + stake + gain); // mise remboursée + gain
       title = "Vous gagnez !";
+      sfx.win(pEval.category);
     } else if (outcome === 0) {
       setChips((c) => c + stake); // mise rendue
       title = "Égalité — mise rendue";
+      sfx.tie();
     } else {
       gain = -stake;
       title = "Luigi remporte la manche";
+      sfx.lose();
     }
 
     setStats((s) => ({
@@ -360,6 +376,12 @@ export default function LuigiPicturePoker() {
             action={luigiAction}
           />
 
+          {/* Tableau des gains, à gauche de Luigi */}
+          <HandsPanel
+            playerCat={phase === "exchange" || showdown ? playerCat : null}
+            luigiCat={showdown ? luigiCat : null}
+          />
+
           {/* Barre d'état : solde, titre, règles */}
           <header className="pointer-events-none absolute inset-x-2 top-2 flex items-center gap-2">
             <div
@@ -377,7 +399,7 @@ export default function LuigiPicturePoker() {
               onClick={music.toggle}
               className="pointer-events-auto flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-xl text-emerald-50 active:scale-95"
               style={panel}
-              aria-label={music.on ? "Couper la musique" : "Activer la musique"}
+              aria-label={music.on ? "Couper le son" : "Activer le son"}
               aria-pressed={music.on}
             >
               <SpeakerIcon on={music.on} />
@@ -503,7 +525,10 @@ export default function LuigiPicturePoker() {
                         key={n}
                         type="button"
                         disabled={!ok}
-                        onClick={() => setBet(n)}
+                        onClick={() => {
+                          setBet(n);
+                          sfx.coin();
+                        }}
                         className={`h-12 flex-1 touch-manipulation rounded-xl text-xl font-black transition-transform active:scale-95 ${
                           ok ? "" : "opacity-30"
                         }`}
