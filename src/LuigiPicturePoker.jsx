@@ -12,6 +12,10 @@ import RulesSheet from "./components/RulesSheet.jsx";
 import Coin from "./components/Coin.jsx";
 import TopScreen from "./components/TopScreen.jsx";
 import { useArrivalOrder } from "./hooks/useArrivalOrder.js";
+import { useMusic } from "./hooks/useMusic.js";
+
+// Chemin relatif : fonctionne sur GitHub Pages comme dans les applis natives.
+const MUSIC_URL = "./audio/music_casino.mp3";
 
 const FIVE_FALSE = [false, false, false, false, false];
 
@@ -43,6 +47,7 @@ export default function LuigiPicturePoker() {
   const [result, setResult] = useState(null);
   const [stats, setStats] = useState({ wins: 0, losses: 0, ties: 0, best: -1 });
   const [showRules, setShowRules] = useState(false);
+  const music = useMusic(MUSIC_URL);
 
   /* --- Références : valeurs lues depuis les timers, hors cycle de rendu --- */
   const dealerRef = useRef(null);
@@ -369,6 +374,16 @@ export default function LuigiPicturePoker() {
             </p>
             <button
               type="button"
+              onClick={music.toggle}
+              className="pointer-events-auto flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-xl text-emerald-50 active:scale-95"
+              style={panel}
+              aria-label={music.on ? "Couper la musique" : "Activer la musique"}
+              aria-pressed={music.on}
+            >
+              <SpeakerIcon on={music.on} />
+            </button>
+            <button
+              type="button"
               onClick={() => setShowRules(true)}
               className="pointer-events-auto flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-xl text-lg font-black text-emerald-900 active:scale-95"
               style={{
@@ -558,6 +573,25 @@ export default function LuigiPicturePoker() {
 
       {showRules && <RulesSheet onClose={() => setShowRules(false)} />}
     </div>
+  );
+}
+
+/** Haut-parleur, barré quand la musique est coupée. */
+function SpeakerIcon({ on }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" />
+      {on ? (
+        <path
+          d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      ) : (
+        <path d="M16 9.5l5 5M21 9.5l-5 5" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" />
+      )}
+    </svg>
   );
 }
 

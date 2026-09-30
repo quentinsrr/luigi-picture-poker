@@ -129,6 +129,8 @@ export const COPIES_PER_SYMBOL = 5; // 6 × 5 = 30 cartes
 
 **Accélérer ou ralentir les animations** → l'objet `TIMING` dans `src/game/config.js`. `dealStep` et `cardFlight` règlent à la fois les vols 3D et l'apparition des cartes en bas : les deux écrans restent synchronisés. Les durées CSS sont dans `index.css` (`.lpp-flipper` pour le retournement).
 
+**Changer la musique** → remplace `public/audio/music_casino.mp3` (ou change `MUSIC_URL` en haut de `LuigiPicturePoker.jsx`). Elle démarre au premier toucher de l'écran, les navigateurs mobiles interdisant le son avant un geste. Elle se met en pause quand l'appli passe en arrière-plan, et le bouton haut-parleur de l'écran du haut la coupe (choix mémorisé). Pour une boucle sans blanc, exporte un MP3 dont la fin rejoint le début. Garde un fichier léger (moins de 3–4 Mo) : il est téléchargé à chaque première visite.
+
 **Recadrer la scène** → `src/scene/config.js` : position de la caméra, hauteur de la table, emplacement du paquet, inclinaison des cartes de Luigi (`LUIGI_CARD_TILT`).
 
 **Rendre Luigi plus dur** → `src/game/ai.js`. La fonction accepte un second argument `random`, ce qui permet de la tester de façon déterministe :
